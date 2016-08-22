@@ -12,12 +12,16 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        self.q_matrix = np.random.rand(4, 4)
-        self.gamma = 0.9
+        self.q_matrix = np.random.randint(low=0, high=10, size=(5, 4))
+        self.gamma = 0.9   # Discount Factor 
+        self.alpha = 0.5   # Learning Rate
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+
+    def Qmax(self, state):
+        return max(self.q_matrix[state, :])
 
     def update(self, t):
         # Gather inputs
@@ -28,14 +32,18 @@ class LearningAgent(Agent):
          
         # TODO: Update state
         if inputs["light"] == "green":
-          self.state = 0                    # "OK" state 
+            if self.next_waypoint == "left" and inputs["left"] == None and inputs["right"] == None and inputs["oncoming"] == None:  
+                self.state = 0             # Okay to go "left" if no traffic coming from left, right and forward direction. 
+            elif self.next_waypoint == "forward" and inputs["left"] == None and inputs["right"] == None:
+                self.state = 1             # Okay to go "forward" if no traffic coming from left and right direction. 
+            elif self.next_waypoint == "right":
+                self.state = 2             # Okay to go "right"
+            else:
+                self.state = 3             # Collsion state 
         elif inputs["light"] == "red":
-          self.state = 1                    # "Stop!" state
-        elif deadline < 0:
-          self.state = 2                    # "Deadline Missed!" state   
-        else:
-          self.state = 3                    # "None" state
-        
+            self.state = 4                 # Stop at red signal 
+
+ 
         # TODO: Select action according to your policy
         #action =  (None, 'forward', 'left', 'right')[random.randint(0, 3)]
         action = (None, 'forward', 'left', 'right')[list(self.q_matrix[self.state, :]).index(max(self.q_matrix[self.state, :]))]
@@ -44,19 +52,10 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action)
 
         # TODO: Learn policy based on state, action, reward
-        # Let's find the next state after the current action 
-        next_state = None
-        if deadline - 1 < 0:
-          next_state = 2
-        elif inputs["light"] == "green":
-          next_state = 0
-        elif inputs["light"] == "red":
-          next_state = 1
-
         # Find the max a' Q(s', a') value  for the next state. 
-        max_entry = max(self.q_matrix[next_state, :])
-        
-        self.q_matrix[self.state, (None, 'forward', 'left', 'right').index(action)] = reward + self.gamma * max_entry 
+        max_entry = max(self.q_matrix[self.state, :])
+
+        self.q_matrix[self.state, (None, 'forward', 'left', 'right').index(action)] = self.alpha * reward + (1 - self.alpha)* max_entry 
         print("Q_matrix ")
         print(self.q_matrix)
 
