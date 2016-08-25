@@ -3,6 +3,7 @@ from environment import Agent, Environment
 from planner import RoutePlanner
 from simulator import Simulator
 import numpy as np 
+import matplotlib.pyplot as plt
 
 class LearningAgent(Agent):
     """An agent that learns to drive in the smartcab world."""
@@ -12,15 +13,19 @@ class LearningAgent(Agent):
         self.color = 'red'  # override color
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
-        #self.q_matrix = np.random.randint(low=0, high=10, size=(14, 4))
         self.q_matrix = np.zeros((6, 4))
         self.gamma = 0.8   # Discount Factor 
         self.alpha = 0.5   # Learning Rate
         self.epsilon = 0.3  # Epsilon Value to trade off between exploration and exploitation. 
+        self.reach_dest = 0 # Number of times agent is able to reach the destination state. 
+        self.total_rewards = [] # Total reward agent is gatthering in each state. 
+        self.total_reward_current_iteration = 0.0 # Total rewards obtained by agent in current state. 
 
     def reset(self, destination=None):
         self.planner.route_to(destination)
         # TODO: Prepare for a new trip; reset any variables here, if required
+        self.total_rewards.append(self.total_reward_current_iteration)
+        self.total_reward_current_iteration = 0.0 
 
     def Qmax(self, state):
         return max(self.q_matrix[state, :])
@@ -67,6 +72,11 @@ class LearningAgent(Agent):
 
         # Execute action and get reward
         reward = self.env.act(self, action)
+         
+        # Collecting performance data from environment. 
+        self.total_reward_current_iteration += reward
+        if reward > 10.0:
+            self.reach_dest += 1
 
         # Find the next state after the current action on the current state. 
         learning_agent_environment_new_state = self.env.agent_states[self]    
@@ -95,7 +105,6 @@ class LearningAgent(Agent):
                                                             self.q_matrix[position_in_q_matrix, action_index])
         print("Q_matrix ")
         print(self.q_matrix)
-
         print "LearningAgent.update(): deadline = {}, inputs = {}, action = {}, reward = {}".format(deadline, inputs, action, reward)  # [debug]
 
 
@@ -109,12 +118,18 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.3, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0., display=False)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
     # NOTE: To quit midway, press Esc or close pygame window, or hit Ctrl+C on the command-line
 
+    print("Total Number of Times agent reached goal state : " + str(a.reach_dest) + " among total number of 100.0 trails, success rate is : " + str(a.reach_dest/100.0))
+    plt.plot([x for x in range(100)], a.total_rewards)
+    plt.xlabel('Iterations')
+    plt.ylabel('Total Rewards accumulated by agent')
+    plt.title('Reward vs Iterations')
+    plt.show() 
 
 if __name__ == '__main__':
     run()
