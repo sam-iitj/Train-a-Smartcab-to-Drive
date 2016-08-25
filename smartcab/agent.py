@@ -13,7 +13,7 @@ class LearningAgent(Agent):
         self.planner = RoutePlanner(self.env, self)  # simple route planner to get next_waypoint
         # TODO: Initialize any additional variables here
         #self.q_matrix = np.random.randint(low=0, high=10, size=(14, 4))
-        self.q_matrix = np.zeros((14, 4))
+        self.q_matrix = np.zeros((6, 4))
         self.gamma = 0.8   # Discount Factor 
         self.alpha = 0.5   # Learning Rate
         self.epsilon = 0.3  # Epsilon Value to trade off between exploration and exploitation. 
@@ -37,17 +37,19 @@ class LearningAgent(Agent):
         heading = learning_agent_environment["heading"]
         destination = learning_agent_environment["destination"]
         current_manhattan_distance = self.env.compute_dist(current_state, destination)
-        
-        dist_X = (current_state[0] - destination[0])%6
-        dist_Y = (current_state[1] - destination[1])%8
-
-        if inputs["light"] == "green" and (self.next_waypoint == "left" and inputs["left"] == None and inputs["right"] == None and inputs["oncoming"] == None) or \
-                                          (self.next_waypoint == "forward" and inputs["left"] == None and inputs["right"] == None) or \
-                                          (self.next_waypoint == "right"):
-            position_in_q_matrix = dist_X + dist_Y 
+       
+        if inputs["light"] == "green" and (self.next_waypoint == "left" and inputs["left"] == None and inputs["right"] == None and inputs["oncoming"] == None):
+            position_in_q_matrix = 0
+        elif inputs["light"] == "green" and self.next_waypoint == "forward" and inputs["left"] == None and inputs["right"] == None:
+            position_in_q_matrix = 1 
+        elif inputs["light"] == "green" and self.next_waypoint == "right":
+            position_in_q_matrix = 2
+        elif inputs["light"] == "red" and self.next_waypoint == "right":
+            position_in_q_matrix = 3
         else:
-            position_in_q_matrix = self.q_matrix.shape[0] - 1
-
+            position_in_q_matrix = 4
+         
+        self.state = position_in_q_matrix
         print("Current Distance from destination : " + str(self.env.compute_dist(current_state, destination)))
 
         # TODO: Select action according to your policy
@@ -70,18 +72,18 @@ class LearningAgent(Agent):
         learning_agent_environment_new_state = self.env.agent_states[self]    
         new_state = learning_agent_environment_new_state["location"]   
         new_heading = learning_agent_environment_new_state["heading"]
-
         current_manhattan_distance = self.env.compute_dist(new_state, destination)
-        
-        newdist_X = (new_state[0] - destination[0])%6
-        newdist_Y = (new_state[1] - destination[1])%8
 
-        if inputs["light"] == "green" and (self.next_waypoint == "left" and inputs["left"] == None and inputs["right"] == None and inputs["oncoming"] == None) or \
-                                          (self.next_waypoint == "forward" and inputs["left"] == None and inputs["right"] == None) or \
-                                          (self.next_waypoint == "right"):
-            newposition_in_q_matrix = newdist_X + newdist_Y
+        if inputs["light"] == "green" and (self.next_waypoint == "left" and inputs["left"] == None and inputs["right"] == None and inputs["oncoming"] == None):
+            newposition_in_q_matrix = 0
+        elif inputs["light"] == "green" and self.next_waypoint == "forward" and inputs["left"] == None and inputs["right"] == None:
+            newposition_in_q_matrix = 1
+        elif inputs["light"] == "green" and self.next_waypoint == "right":
+            newposition_in_q_matrix = 2
+        elif inputs["light"] == "red" and self.next_waypoint == "right":
+            newposition_in_q_matrix = 3
         else:
-            newposition_in_q_matrix = self.q_matrix.shape[0] - 1
+            newposition_in_q_matrix = 4
 
         # Find the index of the action in the new state which maximizes the Q value 
         newaction = (None, 'forward', 'left', 'right')[list(self.q_matrix[newposition_in_q_matrix, :]).index(max(self.q_matrix[newposition_in_q_matrix, :]))]
@@ -107,7 +109,7 @@ def run():
     # NOTE: You can set enforce_deadline=False while debugging to allow longer trials
 
     # Now simulate it
-    sim = Simulator(e, update_delay=0.1, display=True)  # create simulator (uses pygame when display=True, if available)
+    sim = Simulator(e, update_delay=0.3, display=True)  # create simulator (uses pygame when display=True, if available)
     # NOTE: To speed up simulation, reduce update_delay and/or set display=False
 
     sim.run(n_trials=100)  # run for a specified number of trials
