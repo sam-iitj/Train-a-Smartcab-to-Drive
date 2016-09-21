@@ -1,0 +1,6 @@
+{
+  "name": "Train-a-smartcab-to-drive",
+  "tagline": "Training a smart cab to drive in a grid world using reinforcement learning",
+  "body": "# Project 4: Reinforcement Learning\r\n## Train a Smartcab How to Drive\r\n\r\n### Install\r\n\r\nThis project requires **Python 2.7** with the [pygame](https://www.pygame.org/wiki/GettingStarted\r\n) library installed\r\n\r\n### Code\r\n\r\nTemplate code is provided in the `smartcab/agent.py` python file. Additional supporting python code can be found in `smartcab/enviroment.py`, `smartcab/planner.py`, and `smartcab/simulator.py`. Supporting images for the graphical user interface can be found in the `images` folder. While some code has already been implemented to get you started, you will need to implement additional functionality for the `LearningAgent` class in `agent.py` when requested to successfully complete the project. \r\n\r\n### Run\r\n\r\nIn a terminal or command window, navigate to the top-level project directory `smartcab/` (that contains this README) and run one of the following commands:\r\n\r\n```python smartcab/agent.py```  \r\n```python -m smartcab.agent```\r\n\r\nThis will run the `agent.py` file and execute your agent code.\r\n# Train-a-Smartcab-to-Drive\r\n",
+  "note": "Don't delete this file! It's used internally to help with page regeneration."
+}
